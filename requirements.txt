@@ -1,11 +1,4 @@
 ﻿fastapi==0.95.2
-uvicorn==0.22.0
-pandas==1.5.3
-nest_asyncio==1.5.6
-pydantic==1.10.7
-gunicorn==20.1.0
-
-
 
 Cython==3.0.11
 joblib==1.4.2
@@ -16,3 +9,8 @@ scipy==1.15.0
 setuptools==75.8.0
 threadpoolctl==3.5.0
 wheel==0.45.1
+pandas==1.5.3
+gunicorn==20.1.0
+pydantic==1.10.7
+nest_asyncio==1.5.6
+uvicorn==0.22.0
