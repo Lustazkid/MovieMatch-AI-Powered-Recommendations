@@ -1,5 +1,6 @@
 ﻿fastapi==0.95.2
-gunicorn==20.1.0
-uvicorn[gunicorn]
-pandas
-python-dotenv
+uvicorn==0.22.0
+pandas==1.5.3
+numpy==1.23.5
+nest_asyncio==1.5.6
+pydantic==1.10.7
