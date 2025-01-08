@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 import nest_asyncio
 from uvicorn import run
 
@@ -94,8 +96,20 @@ df_merged = pd.merge(df_movies, df_credits, on='id', how='left')
 
 # Implementación de la API (Configuración de la API)
 
+# Cargar el archivo
+df = pd.read_csv("movies_dataset.csv", low_memory=False)
+
+# Llenar valores nulos en la columna 'overview' (importante para TF-IDF)
+df['overview'] = df['overview'].fillna('')
+# Crear el vectorizador TF-IDF
+tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+
+# Generar la matriz TF-IDF con la columna 'overview'
+tfidf_matrix = tfidf_vectorizer.fit_transform(df['overview'])
+
 # Cargar el dataset transformado
 df = pd.read_csv("transformed_movies.csv", low_memory=False)
+
 # Crear la aplicación FastAPI
 app = FastAPI()
 
@@ -201,7 +215,35 @@ def get_director(nombre_director: str):
             "peliculas": peliculas
         }
     return {"error": "Director no encontrado"}
-
+@app.get("/recomendaciones/{titulo}")
+def recomendaciones(titulo: str, n_recomendaciones: int = 5):
+    try:
+        # Asegúrate de que el título está en el dataset
+        if titulo not in df['title'].values:
+            return JSONResponse(
+                content={"error": f"El título '{titulo}' no se encuentra en el dataset."},
+                status_code=404
+            )
+        
+        # Obtén el índice de la película
+        idx = df[df['title'] == titulo].index[0]
+        
+        # Calcula similitudes
+        similitudes = cosine_similarity(tfidf_matrix[idx], tfidf_matrix).flatten()
+        
+        # Obtén índices de películas más similares
+        indices_similares = similitudes.argsort()[::-1][1:n_recomendaciones + 1]
+        
+        # Genera la respuesta
+        recomendaciones = df.iloc[indices_similares][['title', 'overview']].to_dict(orient='records')
+        return {"titulo": titulo, "recomendaciones": recomendaciones}
+    
+    except Exception as e:
+        # Manejo de errores generales
+        return JSONResponse(
+            content={"error": f"Error procesando la solicitud: {str(e)}"},
+            status_code=500
+        )
 # Ejecución Local
 
 nest_asyncio.apply()
