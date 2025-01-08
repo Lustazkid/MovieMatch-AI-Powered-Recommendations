@@ -1,4 +1,4 @@
-"Importar Librerías y Cargar los Datos"
+# Importar Librerías y Cargar los Datos
 
 import pandas as pd
 import numpy as np
@@ -9,40 +9,40 @@ from pydantic import BaseModel
 import nest_asyncio
 from uvicorn import run
 
-#Importe y carga de datos
+# Importe y carga de datos
 df_movies = pd.read_csv("movies_dataset.csv", low_memory=False)
 df_credits = pd.read_csv("credits.csv")
 
-"Exploración Inicial de los Datos (EDA)"
+# Exploración Inicial de los Datos (EDA)
 
-#Exploración Inicial
+# Exploración Inicial
 print("Primeras filas de df_movies:")
 print(df_movies.head())
 
 print("\nPrimeras filas de df_credits:")
 print(df_credits.head())
 
-#Información de los Data frame
+# Información de los Data frame
 print("\nInformación de df_movies:")
 print(df_movies.info())
 
 print("\nInformación de df_credits:")
 print(df_credits.info())
 
-"reduccion df"
+# Reducción df
 
-#Recorte aleatorio del 50% del DataFrame 'credits.csv'
+# Recorte aleatorio del 50% del DataFrame 'credits.csv'
 df_credits = df_credits.sample(frac=0.5, random_state=42)
 df_credits.to_csv("credits.csv", index=False)
 
-"Transformación de Datos (ETL) (Desanidar Columnas y Llenar Valores Nulos)"
+# Transformación de Datos (ETL) (Desanidar Columnas y Llenar Valores Nulos)
 
 # Desanidar columnas específicas
 def desanidar_json(json_column):
     if isinstance(json_column, str):
         try:
             return eval(json_column)
-            except:
+        except:
             return np.nan
     return json_column
 
@@ -92,7 +92,7 @@ df_movies['id'] = pd.to_numeric(df_movies['id'], errors='coerce')
 # Realizar el merge
 df_merged = pd.merge(df_movies, df_credits, on='id', how='left')
 
-" Implementación de la API (Configuración de la API)"
+# Implementación de la API (Configuración de la API)
 
 # Cargar el dataset transformado
 df = pd.read_csv("transformed_movies.csv", low_memory=False)
@@ -109,7 +109,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-"Endpoints de la API"
+# Endpoints de la API
 
 @app.get("/")
 def home():
@@ -202,18 +202,9 @@ def get_director(nombre_director: str):
         }
     return {"error": "Director no encontrado"}
 
-"Ejecución Local"
+# Ejecución Local
 
 nest_asyncio.apply()
 
 # Ejecutar la aplicación
 run(app, host="0.0.0.0", port=8000)
-
-
-
-
-
-
-
-
-
