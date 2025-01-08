@@ -1,5 +1,5 @@
 ﻿fastapi
 uvicorn[gunicorn]
-gunicorn
+gunicorn "codigo_api:app"
 pandas
 python-dotenv
