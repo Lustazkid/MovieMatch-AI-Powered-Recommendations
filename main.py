@@ -92,8 +92,7 @@ df_movies['id'] = pd.to_numeric(df_movies['id'], errors='coerce')
 # Realizar el merge
 df_merged = pd.merge(df_movies, df_credits, on='id', how='left')
 
-" Implementación de la API
-(Configuración de la API)"
+" Implementación de la API (Configuración de la API)"
 
 # Cargar el dataset transformado
 df = pd.read_csv("transformed_movies.csv", low_memory=False)
