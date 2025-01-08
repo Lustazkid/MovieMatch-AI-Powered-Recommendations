@@ -1,5 +1,3 @@
-"Importar Librerías y Cargar los Datos"
-
 import pandas as pd
 import numpy as np
 from fastapi import FastAPI
@@ -12,8 +10,6 @@ from uvicorn import run
 #Importe y carga de datos
 df_movies = pd.read_csv("movies_dataset.csv", low_memory=False)
 df_credits = pd.read_csv("credits.csv")
-
-"Exploración Inicial de los Datos (EDA)"
 
 #Exploración Inicial
 print("Primeras filas de df_movies:")
@@ -29,20 +25,18 @@ print(df_movies.info())
 print("\nInformación de df_credits:")
 print(df_credits.info())
 
-"reduccion df"
-
 #Recorte aleatorio del 50% del DataFrame 'credits.csv'
 df_credits = df_credits.sample(frac=0.5, random_state=42)
 df_credits.to_csv("credits.csv", index=False)
 
-"Transformación de Datos (ETL) (Desanidar Columnas y Llenar Valores Nulos)"
+# Transformación de Datos (ETL)
 
 # Desanidar columnas específicas
 def desanidar_json(json_column):
     if isinstance(json_column, str):
         try:
-            return eval(json_column)
-            except:
+            return eval(json_column)  # Evaluar como JSON si es posible
+        except:
             return np.nan
     return json_column
 
@@ -78,29 +72,9 @@ df_movies = df_movies.drop(columns=columns_to_drop, errors='ignore').copy()
 # Guardar el dataframe transformado
 df_movies.to_csv("transformed_movies.csv", index=False)
 
-# Verificar columnas disponibles antes de intentar eliminarlas
-print("Columnas actuales del DataFrame:", df_movies.columns)
-
-# Eliminar columnas innecesarias (ignorar errores si alguna no existe)
-columns_to_drop = ['video', 'imdb_id', 'adult', 'original_title', 'poster_path', 'homepage']
-df_movies = df_movies.drop(columns=columns_to_drop, errors='ignore')
-
-# Convertir 'id' a numérico y realizar el merge con df_credits
-df_credits['id'] = pd.to_numeric(df_credits['id'], errors='coerce')
-df_movies['id'] = pd.to_numeric(df_movies['id'], errors='coerce')
-
-# Realizar el merge
-df_merged = pd.merge(df_movies, df_credits, on='id', how='left')
-
-" Implementación de la API
-(Configuración de la API)"
-
-# Cargar el dataset transformado
-df = pd.read_csv("transformed_movies.csv", low_memory=False)
-# Crear la aplicación FastAPI
+#Implementación de la API
 app = FastAPI()
 
-# Habilitar CORS (opcional)
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -110,11 +84,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-"Endpoints de la API"
-
+# Endpoints de la API
 @app.get("/")
 def home():
-    return {"message": "Bienvenido a la API de Películas"}
+    return {"message": "Welcome to MovieMatch AI-Powered Recommendations"}
 
 @app.get("/cantidad_filmaciones_mes/{mes}")
 def cantidad_filmaciones_mes(mes: str):
@@ -125,7 +98,7 @@ def cantidad_filmaciones_mes(mes: str):
     }
     mes_num = meses.get(mes.lower())
     if mes_num:
-        cantidad = df[pd.to_datetime(df['release_date']).dt.month == mes_num].shape[0]
+        cantidad = df_movies[pd.to_datetime(df_movies['release_date']).dt.month == mes_num].shape[0]
         return {"mes": mes, "cantidad": cantidad}
     return {"error": "Mes inválido"}
 
@@ -137,13 +110,13 @@ def cantidad_filmaciones_dia(dia: str):
     }
     dia_num = dias.get(dia.lower())
     if dia_num is not None:
-        cantidad = df[pd.to_datetime(df['release_date']).dt.weekday == dia_num].shape[0]
+        cantidad = df_movies[pd.to_datetime(df_movies['release_date']).dt.weekday == dia_num].shape[0]
         return {"dia": dia, "cantidad": cantidad}
     return {"error": "Día inválido"}
 
 @app.get("/score_titulo/{titulo}")
 def score_titulo(titulo: str):
-    resultado = df[df['title'].str.contains(titulo, case=False, na=False)]
+    resultado = df_movies[df_movies['title'].str.contains(titulo, case=False, na=False)]
     if not resultado.empty:
         pelicula = resultado.iloc[0]
         return {
@@ -155,7 +128,7 @@ def score_titulo(titulo: str):
 
 @app.get("/votos_titulo/{titulo}")
 def votos_titulo(titulo: str):
-    resultado = df[df['title'].str.contains(titulo, case=False, na=False)]
+    resultado = df_movies[df_movies['title'].str.contains(titulo, case=False, na=False)]
     if not resultado.empty:
         pelicula = resultado.iloc[0]
         if pelicula['vote_count'] >= 2000:
@@ -169,7 +142,7 @@ def votos_titulo(titulo: str):
 
 @app.get("/get_actor/{nombre_actor}")
 def get_actor(nombre_actor: str):
-    actores = df[df['cast'].str.contains(nombre_actor, case=False, na=False)]
+    actores = df_movies[df_movies['cast'].str.contains(nombre_actor, case=False, na=False)]
     if not actores.empty:
         retorno_total = actores['return'].sum()
         cantidad = actores.shape[0]
@@ -184,7 +157,7 @@ def get_actor(nombre_actor: str):
 
 @app.get("/get_director/{nombre_director}")
 def get_director(nombre_director: str):
-    directores = df[df['crew'].str.contains(nombre_director, case=False, na=False)]
+    directores = df_movies[df_movies['crew'].str.contains(nombre_director, case=False, na=False)]
     if not directores.empty:
         peliculas = []
         for _, row in directores.iterrows():
@@ -203,18 +176,7 @@ def get_director(nombre_director: str):
         }
     return {"error": "Director no encontrado"}
 
-"Ejecución Local"
-
-nest_asyncio.apply()
-
-# Ejecutar la aplicación
-run(app, host="0.0.0.0", port=8000)
-
-
-
-
-
-
-
-
-
+#Ejecución Local
+if __name__ == "__main__":
+    nest_asyncio.apply()
+    run(app, host="0.0.0.0", port=8000)
