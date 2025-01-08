@@ -7,29 +7,29 @@ from pydantic import BaseModel
 import nest_asyncio
 from uvicorn import run
 
-# 1. Importar y cargar los datos
+#Importe y carga de datos
 df_movies = pd.read_csv("movies_dataset.csv", low_memory=False)
 df_credits = pd.read_csv("credits.csv")
 
-# 2. Exploración Inicial de los Datos
+#Exploración Inicial
 print("Primeras filas de df_movies:")
 print(df_movies.head())
 
 print("\nPrimeras filas de df_credits:")
 print(df_credits.head())
 
-# Información general de las columnas y tipos de datos
+#Información de los Data frame
 print("\nInformación de df_movies:")
 print(df_movies.info())
 
 print("\nInformación de df_credits:")
 print(df_credits.info())
 
-# Tomar una muestra aleatoria del 50% del DataFrame de 'credits.csv'
+#Recorte aleatorio del 50% del DataFrame 'credits.csv'
 df_credits = df_credits.sample(frac=0.5, random_state=42)
 df_credits.to_csv("credits.csv", index=False)
 
-# 3. Transformación de Datos (ETL)
+# Transformación de Datos (ETL)
 
 # Desanidar columnas específicas
 def desanidar_json(json_column):
@@ -72,10 +72,9 @@ df_movies = df_movies.drop(columns=columns_to_drop, errors='ignore').copy()
 # Guardar el dataframe transformado
 df_movies.to_csv("transformed_movies.csv", index=False)
 
-# 4. Implementación de la API
+#Implementación de la API
 app = FastAPI()
 
-# Habilitar CORS (opcional)
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -88,7 +87,7 @@ app.add_middleware(
 # Endpoints de la API
 @app.get("/")
 def home():
-    return {"message": "Bienvenido a la API de Películas"}
+    return {"message": "Welcome to MovieMatch AI-Powered Recommendations"}
 
 @app.get("/cantidad_filmaciones_mes/{mes}")
 def cantidad_filmaciones_mes(mes: str):
@@ -177,10 +176,7 @@ def get_director(nombre_director: str):
         }
     return {"error": "Director no encontrado"}
 
-# 5. Ejecución Local
+#Ejecución Local
 if __name__ == "__main__":
-    # Usar nest_asyncio para permitir la ejecución en Jupyter Notebook
     nest_asyncio.apply()
-
-    # Ejecutar la aplicación
     run(app, host="0.0.0.0", port=8000)
